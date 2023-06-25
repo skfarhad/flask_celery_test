@@ -1,0 +1,10 @@
+FROM rabbitmq:management
+
+ENV RABBITMQ_USER rabbitmq
+ENV RABBITMQ_PASSWORD rabbit@pass
+ENV RABBITMQ_PID_FILE /var/lib/rabbitmq/mnesia/rabbitmq
+
+COPY ./start.sh /start.sh
+RUN chmod +x /start.sh
+
+CMD [ "./start.sh" ]

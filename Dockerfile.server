@@ -1,0 +1,31 @@
+FROM python:3.11.3-slim
+
+ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE 1
+
+RUN apt-get update \
+  # dependencies for building Python packages
+  && apt-get install -y build-essential \
+  # psycopg2 dependencies
+  && apt-get install -y libpq-dev \
+  # Additional dependencies
+  && apt-get install -y telnet netcat \
+  # cleaning up unused files
+  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+  && rm -rf /var/lib/apt/lists/*
+
+RUN pip install celery
+RUN pip install pymongo
+RUN pip install flask
+
+WORKDIR /app
+
+# Requirements are installed here to ensure they will be cached.
+#COPY ./requirements.txt /requirements.txt
+
+COPY ./ /app/
+
+WORKDIR ./api
+
+RUN chmod u+x ./entrypoint.sh
+ENTRYPOINT ["bash", "./entrypoint.sh"]

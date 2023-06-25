@@ -1,0 +1,63 @@
+version: "3.7"
+
+services:
+  # Deploy the broker.
+  rabbitmq:
+    build:
+      context: ./rabbitmq
+      dockerfile: Dockerfile.rmq
+    hostname: rabbitmq
+    ports:
+      # Expose the port for the worker to add/get tasks
+      - 5672:5672
+      # OPTIONAL: Expose the GUI port
+      - 15672:15672
+    networks:
+      - async_network
+
+  mongodb:
+    image: mongo:5.0.8
+    hostname: mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - async_network
+
+  worker:
+    build:
+      context: ./
+      dockerfile: Dockerfile.worker
+    environment:
+      - RMQ_HOST=rabbitmq
+      - MONGODB_HOST=mongodb
+
+    depends_on:
+      - rabbitmq
+    networks:
+      - async_network
+
+  app:
+    build:
+      context: ./
+      dockerfile: Dockerfile.server
+    environment:
+      - RMQ_HOST=rabbitmq
+      - MONGODB_HOST=mongodb
+    ports:
+      - 8080:5000
+
+    depends_on:
+      - rabbitmq
+      - worker
+    networks:
+      - async_network
+
+
+
+volumes:
+  mongo_data:
+
+networks:
+  async_network:
